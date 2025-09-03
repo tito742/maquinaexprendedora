@@ -1,3 +1,5 @@
+***documentacion***
+
 En el siguiente archivo se muestra la documentacion del proyecto de la maquina exprendedora que vamos a realizar, entre PEREZ, JUAREZ, GALAZAN.
 el archivo contiene muestras de códigos que sirven a modo de ejemplo para llevar a cabo la conexión y funcionamiento de la máquina expendedora y los materiales a utilizar incluida la conexión a mercado pago.
 En las próximas clases se llevará a cabo la formación básica de la máquina, usando de base la sigiente documentacion.
