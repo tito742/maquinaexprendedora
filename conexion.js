@@ -1,4 +1,4 @@
-//Código de la maquina exprendedora:
+Código de la maquina exprendedora:
 
  #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
