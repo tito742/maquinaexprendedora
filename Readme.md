@@ -1,13 +1,10 @@
 ***documentacion***
-
 En el siguiente archivo se muestra la documentacion del proyecto de la maquina exprendedora que vamos a realizar, entre PEREZ, JUAREZ, GALAZAN.
 el archivo contiene muestras de códigos que sirven a modo de ejemplo para llevar a cabo la conexión y funcionamiento de la máquina expendedora y los materiales a utilizar incluida la conexión a mercado pago.
 En las próximas clases se llevará a cabo la formación básica de la máquina, usando de base la sigiente documentacion.
 
 6to C
-LABORATORIA DE PROGRAMACION III
-
-ACTIVDAD:
+LABORATORIO DE PROGRAMACION III
 
 Kiosco Automatizado con Mercado Pago
 Fase 1 – Investigación y Análisis (Semana 1 y 2)
@@ -59,13 +56,20 @@ o	Validación de firma digital en notificaciones de pago.
 o	Protección contra duplicados verificando ID de transacción.
 o	Aislamiento de control para que el mecanismo de entrega solo se active tras confirmación autenticada.
 
+
+
+
 Fase 2 – Diseño del Sistema (Semana 3)
 Tarea	Descripción	Responsable(s)	Plazo
 Definición de arquitectura	Elegir esquema general (hardware + software + conexión a internet).	Todo el equipo	Día 1 – Día 2
 Diagramas eléctricos y mecánicos	Crear planos de conexión y ensamblaje.	Técnico de hardware	Día 2 – Día 4
 Lista de materiales y herramientas	Adaptar diseño al stock disponible en laboratorio.	Responsable de materiales	Día 4 – Día 5
 
+
+
 Implementación del Sistema Físico
+El producto puede estar hecho a base de impresión 3d o de una base de carton hecha en casa
+
 Se desarrolló un prototipo de kiosco automatizado capaz de recibir pagos a través de la pasarela Mercado Pago y activar un mecanismo de habilitación/dispensado una vez acreditada la transacción.
 El sistema consta de los siguientes módulos:
 1.	Módulo de pago
@@ -187,4 +191,284 @@ Accsess token: APP_USR-2298341657679130-082712-fa5b57bb0a7d9800b70bc3a6bf4d37c7-
 Public key: APP_USR-c4be6073-8d1c-4750-9e54-fa67e193e1fa
 
 Autorizacion para el accsess token: http.addHeader("Authorization", "Bearer TU_ACCESS_TOKEN");
+
+Código de la maquina exprendedora:
+
+ #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Configuración de la pantalla LCD (dirección 0x27)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Pinos de los botones para seleccionar productos
+const int botonA = 2;  // Producto A
+const int botonB = 3;  // Producto B
+const int botonC = 4;  // Producto C
+
+// Pino del motor de paso o servomotor (depende del tipo de motor)
+const int pinMotor = 9;  // Puedo usar un motor de paso o servomotor
+
+// Variables para la cantidad de monedas y el saldo
+int monedas = 0;
+int saldo = 0;
+const int costoProductoA = 5;  // Precio del Producto A
+const int costoProductoB = 3;  // Precio del Producto B
+const int costoProductoC = 2;  // Precio del Producto C
+
+void setup() {
+  // Inicialización de la pantalla LCD
+  lcd.begin(16, 2);
+  lcd.print("Maquina Expendedora");
+
+  // Configuración de los pines de los botones
+  pinMode(botonA, INPUT_PULLUP);
+  pinMode(botonB, INPUT_PULLUP);
+  pinMode(botonC, INPUT_PULLUP);
+
+  // Inicializar el motor
+  pinMode(pinMotor, OUTPUT);
+
+  // Mostrar el saldo inicial
+  lcd.setCursor(0, 1);
+  lcd.print("Saldo: $");
+  lcd.print(saldo);
+}
+
+void loop() {
+  // Comprobamos si se ha insertado una moneda
+  if (digitalRead(5) == LOW) {  // Supón que el pin 5 es un sensor de monedas
+    monedas++;
+    saldo += 1;  // Asumimos que cada moneda tiene valor de 1
+    delay(500);  // Debemos dar tiempo para que el sensor se estabilice
+
+    // Actualizar la pantalla LCD
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Insertando moneda");
+    lcd.setCursor(0, 1);
+    lcd.print("Saldo: $");
+    lcd.print(saldo);
+    delay(1000);  // Mostrar por un momento el saldo
+    lcd.clear();
+    lcd.print("Maquina Expendedora");
+  }
+
+  // Verificar si el usuario presiona los botones para seleccionar productos
+  if (digitalRead(botonA) == LOW) {
+    if (saldo >= costoProductoA) {
+      // Despachar producto A
+      entregarProducto("Producto A");
+      saldo -= costoProductoA;
+      actualizarSaldo();
+    } else {
+      mostrarError("No suficiente saldo");
+    }
+  }
+
+  if (digitalRead(botonB) == LOW) {
+    if (saldo >= costoProductoB) {
+      // Despachar producto B
+      entregarProducto("Producto B");
+      saldo -= costoProductoB;
+      actualizarSaldo();
+    } else {
+      mostrarError("No suficiente saldo");
+    }
+  }
+
+  if (digitalRead(botonC) == LOW) {
+    if (saldo >= costoProductoC) {
+      // Despachar producto C
+      entregarProducto("Producto C");
+      saldo -= costoProductoC;
+      actualizarSaldo();
+    } else {
+      mostrarError("No suficiente saldo");
+    }
+  }
+
+  // Mantener la pantalla actualizada
+  delay(100);
+}
+
+// Función para entregar el producto
+void entregarProducto(String producto) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Dispensando");
+  lcd.setCursor(0, 1);
+  lcd.print(producto);
+
+  // Aquí, activa el motor para dispensar el producto.
+  // Suponiendo que tienes un servomotor o motor de paso que gire
+  digitalWrite(pinMotor, HIGH);
+  delay(2000);  // El motor estará encendido durante 2 segundos
+  digitalWrite(pinMotor, LOW);
+  delay(500);  // Tiempo para que el producto salga
+}
+
+// Función para actualizar el saldo en la pantalla LCD
+void actualizarSaldo() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Saldo: $");
+  lcd.print(saldo);
+}
+
+Wokwii link del proyecto:
+https://share.google/r0LrsX4CQ4I2AyGG4
+
+Wokwii código del proyecto:
+
+// vending machine
+
+#include <LiquidCrystal_I2C.h>
+#include <Keypad.h>
+#include <Servo.h>
+
+LiquidCrystal_I2C lcd (0x27, 16, 2);
+
+// ---------------------------------------------------------
+// Keypad Pins
+const byte ROWS = 4;
+const byte COLS = 4;
+char hexaKeys[ROWS][COLS] = {
+    {'1', '2', '3', 'A'},
+    {'4', '5', '6', 'B'},
+    {'7', '8', '9', 'C'},
+    {'*', '0', '#', 'D'}
+};
+
+byte rowPins[ROWS] = {22, 24, 26, 28};
+byte colPins[COLS] = {30, 32, 34, 36};
+
+Keypad customKeypad = Keypad (makeKeymap (hexaKeys), rowPins, colPins, ROWS, COLS);
+
+// ---------------------------------------------------------
+struct Item {
+    const byte  PinServo;
+    const char  Row;
+    const char  Col;
+    float       price;
+    const char *label;
+
+    Servo       servo;
+}
+item [] = {
+     { 38, 'A', '1', 1.00, "cookie" },
+     { 40, 'A', '2', 1.20, "charm" },
+     { 42, 'B', '3', 0.25, "shake" },
+     { 44, 'C', '7', 1.00, "candy" },
+};
+const int Nitem = sizeof (item)/sizeof (Item);
+
+// ---------------------------------------------------------
+const int           ServoClose = 90;
+const int           ServoOpen  = 180;
+
+const unsigned long ServoRunTime = 5000; // 5 seconds
+
+const char         *MakeSel = "Make Selection";
+
+char row;
+char col;
+
+// -----------------------------------------------------------------------------
+void
+lcdDisp (
+    const char *s0,
+    const char *s1 )
+{
+    lcd.clear     ();
+    lcd.print     (s0);
+
+    lcd.setCursor (0, 1);
+    lcd.print     (s1);
+}
+
+// -----------------------------------------------------------------------------
+void setup ()
+{
+    Serial.begin (9600);
+    Serial.println ("ready");
+
+    // initialize Servos
+    for (int n = 0; n < Nitem; n++)  {
+        Serial.println (n);
+        item [n].servo.attach (item [n].PinServo);
+        item [n].servo.write  (ServoClose);
+    }
+
+    // Initialize LCD
+    lcd.init ();
+    lcd.backlight ();
+    lcdDisp ("   Welcome to", "SuperVending");
+    delay (3000);
+    reset ();;
+}
+
+// -----------------------------------------------------------------------------
+void reset ()
+{
+    row = col = 0;
+    lcdDisp ("Make Selection", "");
+}
+
+// -----------------------------------------------------------------------------
+void processSel (
+    int  itemIdx )
+{
+    lcdDisp ("enjoy your", item [itemIdx].label);
+
+    item [itemIdx].servo.write (ServoOpen);
+    delay (ServoRunTime);
+    item [itemIdx].servo.write (ServoClose);
+}
+
+// -----------------------------------------------------------------------------
+void checkSel ()
+{
+    for (int n = 0; n < Nitem; n++)  {
+        if (item [n].Row == row && item [n].Col == col)  {
+            processSel (n);
+            return;
+        }
+    }
+
+    lcdDisp ("Invalid Selection", " return coins");
+    delay (3000);
+}
+
+// -----------------------------------------------------------------------------
+void loop ()
+{
+    // Handle keypad input
+    char key = customKeypad.getKey ();
+    if (! key)
+        return;         // no key pressed
+
+    char s [50];
+
+    if ('A' <= key && key <= 'F')
+        row = key;
+    else if ('0' <= key && key <= '9')
+        col = key;
+    else if ('#' == key)  {
+        lcdDisp ("Cancel", "");
+        delay (3000);
+        reset ();
+    }
+
+    if (row && col)  {
+        sprintf (s, "row %c, col %c", row, col);
+        lcdDisp ("Your Selection", s);
+        checkSel ();
+        reset ();
+    }
+    else {
+        sprintf (s, "row %c, col %c", row, col);
+        lcdDisp (MakeSel, s);
+    }
+}
+
 
