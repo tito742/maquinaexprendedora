@@ -135,6 +135,4 @@ Autorizacion para el accsess token: http.addHeader("Authorization", "Bearer TU_A
 
 
 Wokwii link del proyecto:
-https://share.google/r0LrsX4CQ4I2AyGG4
-
-
+https://wokwi.com/projects/442374531053143041
